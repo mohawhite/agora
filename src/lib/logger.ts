@@ -1,8 +1,7 @@
 import winston from 'winston'
 import path from 'path'
-import { createStream } from 'rotating-file-stream'
 
-const { combine, timestamp, errors, json, colorize, simple, printf, prettyPrint } = winston.format
+const { combine, timestamp, errors, json, colorize, simple, printf } = winston.format
 
 // Custom format for detailed logging
 const customFormat = printf(({ timestamp, level, message, service, stack, ...meta }) => {
@@ -19,22 +18,17 @@ const customFormat = printf(({ timestamp, level, message, service, stack, ...met
   return log
 })
 
-// Rotating file stream for logs
-const createRotatingTransport = (filename: string, level?: string) => {
-  const stream = createStream(filename, {
-    size: '10M', // 10MB per file
-    interval: '1d', // rotate daily
-    maxFiles: 30, // keep 30 days
-    path: path.join(process.cwd(), 'logs')
-  })
-
-  return new winston.transports.Stream({
-    stream,
+// Simple file transport (no rotation for Edge Runtime compatibility)
+const createFileTransport = (filename: string, level?: string) => {
+  return new winston.transports.File({
+    filename: path.join(process.cwd(), 'logs', filename),
     level,
     format: combine(
       timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       customFormat
-    )
+    ),
+    maxsize: 10 * 1024 * 1024, // 10MB
+    maxFiles: 5
   })
 }
 
@@ -51,25 +45,25 @@ const logger = winston.createLogger({
     version: process.env.npm_package_version || '1.0.0'
   },
   transports: [
-    // Error logs with rotation
-    createRotatingTransport('error.log', 'error'),
+    // Error logs
+    createFileTransport('error.log', 'error'),
     
-    // Combined logs with rotation
-    createRotatingTransport('combined.log'),
+    // Combined logs
+    createFileTransport('combined.log'),
     
     // API access logs
-    createRotatingTransport('api.log', 'http'),
+    createFileTransport('api.log', 'http'),
     
     // Security logs
-    createRotatingTransport('security.log', 'warn'),
+    createFileTransport('security.log', 'warn'),
   ],
   
   // Handle uncaught exceptions and rejections
   exceptionHandlers: [
-    createRotatingTransport('exceptions.log')
+    createFileTransport('exceptions.log')
   ],
   rejectionHandlers: [
-    createRotatingTransport('rejections.log')
+    createFileTransport('rejections.log')
   ],
   exitOnError: false
 })

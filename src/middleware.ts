@@ -1,59 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withCors, getEnvironmentCors, rateLimitByOrigin } from './lib/cors'
-import logger from './lib/logger'
+
+// Rate limiting cache (simple in-memory for Edge Runtime)
+const rateLimitCache = new Map<string, { count: number; resetTime: number }>()
+
+function checkRateLimit(identifier: string, maxRequests: number = 100, windowMs: number = 60000): boolean {
+  const now = Date.now()
+  const key = identifier || 'unknown'
+  
+  const current = rateLimitCache.get(key)
+  
+  if (!current || now > current.resetTime) {
+    rateLimitCache.set(key, { count: 1, resetTime: now + windowMs })
+    return true
+  }
+  
+  if (current.count >= maxRequests) {
+    return false
+  }
+  
+  current.count++
+  return true
+}
 
 export async function middleware(request: NextRequest) {
-  const startTime = Date.now()
   const { pathname } = request.nextUrl
 
   // Apply CORS to API routes
   if (pathname.startsWith('/api/')) {
+    const identifier = request.headers.get('x-forwarded-for') || 
+                      request.headers.get('origin') || 
+                      'unknown'
+    
     // Check rate limiting
-    if (!rateLimitByOrigin(100, 60000)(request)) {
-      logger.logSecurity('Rate limit exceeded', {
-        origin: request.headers.get('origin'),
-        ip: request.headers.get('x-forwarded-for'),
-        path: pathname
-      }, 'warn')
-      
+    if (!checkRateLimit(identifier, 100, 60000)) {
       return new NextResponse('Rate limit exceeded', { status: 429 })
     }
 
-    // Apply CORS
-    const corsHandler = withCors(getEnvironmentCors())
-    
-    // For OPTIONS requests, handle immediately
+    // Handle OPTIONS requests
     if (request.method === 'OPTIONS') {
-      return corsHandler(() => Promise.resolve(new NextResponse(null, { status: 204 })))(request)
+      return new NextResponse(null, { 
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+          'Access-Control-Max-Age': '86400',
+        }
+      })
     }
 
-    // For other requests, let them proceed and add CORS headers
+    // Apply CORS headers to response
     const response = NextResponse.next()
-    
-    // Apply CORS headers
-    const corsConfig = getEnvironmentCors()
     const origin = request.headers.get('origin')
     
-    if (origin && corsConfig.origin) {
+    if (origin) {
       response.headers.set('Access-Control-Allow-Origin', origin)
+    } else {
+      response.headers.set('Access-Control-Allow-Origin', '*')
     }
     
-    if (corsConfig.credentials) {
-      response.headers.set('Access-Control-Allow-Credentials', 'true')
-    }
-    
+    response.headers.set('Access-Control-Allow-Credentials', 'true')
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-
-    // Log API request
-    const responseTime = Date.now() - startTime
-    logger.http(`API ${request.method} ${pathname}`, {
-      method: request.method,
-      path: pathname,
-      origin: origin || 'direct',
-      userAgent: request.headers.get('user-agent'),
-      responseTime: `${responseTime}ms`
-    })
 
     return response
   }
