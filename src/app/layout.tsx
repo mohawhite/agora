@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import BottomNavigation from '@/components/navigation/bottom-navigation'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -78,7 +79,12 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <main className="pb-16 md:pb-0">
+          {children}
+        </main>
+        <BottomNavigation />
+      </body>
     </html>
   )
 }
