@@ -41,6 +41,7 @@ export const salleSchema = z.object({
   postalCode: z.string().min(5, 'Code postal invalide').max(5, 'Code postal invalide'),
   amenities: z.array(z.string()).default([]),
   available: z.boolean().default(true),
+  images: z.array(z.string()).max(10, 'Maximum 10 images').default([]),
 })
 
 export const reservationSchema = z.object({

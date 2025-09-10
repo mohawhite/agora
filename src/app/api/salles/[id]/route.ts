@@ -103,7 +103,8 @@ export async function PUT(
         city, 
         postalCode, 
         amenities, 
-        available 
+        available,
+        images
       } = result.data
 
       const salle = await prisma.salle.update({
@@ -117,6 +118,7 @@ export async function PUT(
           address,
           city,
           postalCode,
+          images: images || [],
           amenities,
           available,
         },

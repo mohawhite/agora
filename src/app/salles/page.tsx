@@ -152,8 +152,18 @@ export default function SallesPage() {
               {salles.map((salle) => (
                 <Link key={salle.id} href={`/salles/${salle.id}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                    <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center">
-                      <div className="text-6xl">🏛️</div>
+                    <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg overflow-hidden">
+                      {salle.images && salle.images.length > 0 ? (
+                        <img
+                          src={salle.images[0]}
+                          alt={salle.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-6xl">🏛️</div>
+                        </div>
+                      )}
                     </div>
                     
                     <CardContent className="p-4">

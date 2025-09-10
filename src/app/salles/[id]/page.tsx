@@ -163,13 +163,52 @@ export default function SallePage({ params }: SallePageProps) {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Colonne principale */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Galerie d'images (placeholder) */}
-            <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-8xl mb-4">🏛️</div>
-                <p className="text-muted-foreground">Photos à venir</p>
+            {/* Galerie d'images */}
+            {salle.images && salle.images.length > 0 ? (
+              <div className="space-y-4">
+                <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                  <img
+                    src={salle.images[0]}
+                    alt={salle.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {salle.images.length > 1 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {salle.images.slice(1, 4).map((image, index) => (
+                      <div key={index} className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img
+                          src={image}
+                          alt={`${salle.name} - ${index + 2}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                    {salle.images.length > 4 && (
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                        <img
+                          src={salle.images[4]}
+                          alt={`${salle.name} - 5`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white font-semibold">
+                            +{salle.images.length - 4} photos
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-8xl mb-4">🏛️</div>
+                  <p className="text-muted-foreground">Photos à venir</p>
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             {salle.description && (

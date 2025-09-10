@@ -40,7 +40,17 @@ export async function GET(request: NextRequest) {
 
     const salles = await prisma.salle.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        capacity: true,
+        price: true,
+        address: true,
+        city: true,
+        images: true,
+        amenities: true,
+        available: true,
         mairie: {
           select: {
             name: true,
@@ -109,7 +119,8 @@ export async function POST(request: NextRequest) {
         city, 
         postalCode, 
         amenities, 
-        available 
+        available,
+        images
       } = result.data
 
       const salle = await prisma.salle.create({
@@ -123,7 +134,7 @@ export async function POST(request: NextRequest) {
           address,
           city,
           postalCode,
-          images: [], // Sera géré plus tard avec l'upload d'images
+          images: images || [],
           amenities,
           available,
         },
