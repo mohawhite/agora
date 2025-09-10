@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  role      UserRole @default(USER)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  mairie       Mairie?
+  reservations Reservation[]
+  sessions     Session[]
+  
+  @@map("users")
+}
+
+model Mairie {
+  id          String  @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  postalCode  String
+  description String?
+  phone       String?
+  email       String?
+  website     String?
+  siret       String? @unique
+  verified    Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salles Salle[]
+
+  @@map("mairies")
+}
+
+model Salle {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  capacity    Int
+  surface     Float?
+  price       Float
+  address     String
+  city        String
+  postalCode  String
+  images      String[]
+  amenities   String[]
+  available   Boolean  @default(true)
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  mairieId      String
+  mairie        Mairie        @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  reservations  Reservation[]
+  disponibilites Disponibilite[]
+
+  @@map("salles")
+}
+
+model Disponibilite {
+  id        String    @id @default(cuid())
+  dayOfWeek Int       // 0 = Dimanche, 1 = Lundi, etc.
+  startTime String    // Format "HH:mm"
+  endTime   String    // Format "HH:mm"
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  salleId String
+  salle   Salle  @relation(fields: [salleId], references: [id], onDelete: Cascade)
+
+  @@map("disponibilites")
+}
+
+model Reservation {
+  id          String            @id @default(cuid())
+  startDate   DateTime
+  endDate     DateTime
+  totalPrice  Float
+  status      ReservationStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salleId String
+  salle   Salle  @relation(fields: [salleId], references: [id], onDelete: Cascade)
+  payment Payment?
+
+  @@map("reservations")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  stripePaymentId   String?       @unique
+  amount            Float
+  currency          String        @default("EUR")
+  status            PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  reservationId String      @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+enum UserRole {
+  USER
+  MAIRIE
+  ADMIN
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
