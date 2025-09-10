@@ -23,9 +23,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  mairie       Mairie?
-  reservations Reservation[]
-  sessions     Session[]
+  mairie            Mairie?
+  reservations      Reservation[]
+  sessions          Session[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
   
   @@map("users")
 }
@@ -165,4 +167,43 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+enum NotificationType {
+  RESERVATION
+  PAYMENT
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType
+  relatedId String?
+  actionUrl String?
+  read      Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String
+  p256dhKey String
+  authKey   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
 }

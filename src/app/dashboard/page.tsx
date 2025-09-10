@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Building2, MapPin, Users, Calendar, Settings } from "lucide-react"
+import NotificationPermission from "@/components/notification-permission"
 
 interface User {
   id: string
@@ -23,10 +24,24 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simuler la récupération des données utilisateur via une API
-    // En attendant, on peut créer une API /api/user/me
-    setLoading(false)
+    loadUserData()
   }, [])
+
+  const loadUserData = async () => {
+    try {
+      const response = await fetch('/api/user/me')
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+      } else {
+        console.error('Erreur lors du chargement des données utilisateur')
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -45,9 +60,12 @@ export default function DashboardPage() {
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Dashboard Agora</h1>
           <p className="text-muted-foreground">
-            Bienvenue sur votre espace personnel
+            {user ? `Bienvenue ${user.firstName} ${user.lastName}` : 'Bienvenue sur votre espace personnel'}
           </p>
         </div>
+
+        {/* Notification permission prompt */}
+        <NotificationPermission />
 
         {/* Cartes d'actions pour les mairies */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
@@ -127,18 +145,20 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          {/* Paramètres */}
-          <div className="bg-card rounded-lg p-6 shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Settings className="w-5 h-5 text-gray-600" />
+          {/* Profil */}
+          <Link href="/profil">
+            <div className="bg-card rounded-lg p-6 shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <Settings className="w-5 h-5 text-gray-600" />
+                </div>
+                <h3 className="font-semibold">Mon Profil</h3>
               </div>
-              <h3 className="font-semibold">Paramètres</h3>
+              <p className="text-sm text-muted-foreground">
+                Gérez vos informations personnelles
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Gérez votre compte
-            </p>
-          </div>
+          </Link>
         </div>
 
         {/* Actions rapides */}
