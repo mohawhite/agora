@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { MapPin, Calendar, Clock, Euro, User, Building2, Phone, Mail, X, Check } from "lucide-react"
+import { MapPin, Calendar, Clock, Euro, User, Building2, Phone, Mail, X, Check, CreditCard } from "lucide-react"
+import Link from "next/link"
 
 interface Reservation {
   id: string
@@ -34,6 +35,10 @@ interface Reservation {
     lastName: string
     email: string
     phone: string | null
+  }
+  payment?: {
+    id: string
+    status: string
   }
 }
 
@@ -287,14 +292,24 @@ export default function ReservationsPage() {
                           </Button>
                         )}
                         {reservation.status === 'CONFIRMED' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusChange(reservation.id, 'CANCELLED')}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            Annuler
-                          </Button>
+                          <>
+                            {(!reservation.payment || reservation.payment.status !== 'COMPLETED') && (
+                              <Link href={`/reservations/${reservation.id}/paiement`}>
+                                <Button size="sm" className="w-full mb-2">
+                                  <CreditCard className="w-4 h-4 mr-1" />
+                                  Payer
+                                </Button>
+                              </Link>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusChange(reservation.id, 'CANCELLED')}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              Annuler
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
