@@ -2,11 +2,17 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Users, Euro, Wifi, Car, Coffee, Search, Filter } from "lucide-react"
+import { MapPin, Users, Euro, Wifi, Car, Coffee, Search, Filter, Map, List } from "lucide-react"
+
+const SallesMap = dynamic(() => import("@/components/map/salles-map"), {
+  ssr: false,
+  loading: () => <div className="h-full bg-muted rounded-lg flex items-center justify-center">Chargement de la carte...</div>
+})
 
 interface Salle {
   id: string
@@ -39,6 +45,7 @@ export default function SallesPage() {
   const [searchCity, setSearchCity] = useState("")
   const [searchCapacity, setSearchCapacity] = useState("")
   const [searchMaxPrice, setSearchMaxPrice] = useState("")
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
 
   useEffect(() => {
     loadSalles()
@@ -126,10 +133,32 @@ export default function SallesPage() {
               Rechercher
             </Button>
           </div>
+          
+          {/* Sélecteur de vue */}
+          <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="flex items-center gap-2"
+            >
+              <List className="w-4 h-4" />
+              Liste
+            </Button>
+            <Button
+              variant={viewMode === 'map' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('map')}
+              className="flex items-center gap-2"
+            >
+              <Map className="w-4 h-4" />
+              Carte
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Liste des salles */}
+      {/* Contenu principal */}
       <div className="max-w-7xl mx-auto p-6">
         {salles.length === 0 ? (
           <div className="text-center py-12">
@@ -148,88 +177,108 @@ export default function SallesPage() {
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {salles.map((salle) => (
-                <Link key={salle.id} href={`/salles/${salle.id}`}>
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                    <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg overflow-hidden">
-                      {salle.images && salle.images.length > 0 ? (
-                        <img
-                          src={salle.images[0]}
-                          alt={salle.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-6xl">🏛️</div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <CardContent className="p-4">
-                      <div className="mb-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-semibold truncate">{salle.name}</h3>
-                          {salle.mairie.verified && (
-                            <Badge variant="secondary" className="text-xs">
-                              Vérifié
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {salle.city}
-                        </p>
+            {viewMode === 'list' ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {salles.map((salle) => (
+                  <Link key={salle.id} href={`/salles/${salle.id}`}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                      <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg overflow-hidden">
+                        {salle.images && salle.images.length > 0 ? (
+                          <img
+                            src={salle.images[0]}
+                            alt={salle.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <div className="text-6xl">🏛️</div>
+                          </div>
+                        )}
                       </div>
-
-                      {salle.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          {salle.description}
-                        </p>
-                      )}
-
-                      <div className="flex items-center justify-between text-sm mb-3">
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Users className="w-4 h-4" />
-                          {salle.capacity} pers.
+                      
+                      <CardContent className="p-4">
+                        <div className="mb-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-semibold truncate">{salle.name}</h3>
+                            {salle.mairie.verified && (
+                              <Badge variant="secondary" className="text-xs">
+                                Vérifié
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {salle.city}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-1 font-semibold">
-                          <Euro className="w-4 h-4" />
-                          {salle.price}€/h
-                        </div>
-                      </div>
 
-                      {salle.amenities.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {salle.amenities.slice(0, 3).map((amenity) => {
-                            const IconComponent = AMENITY_ICONS[amenity]
-                            return (
-                              <div
-                                key={amenity}
-                                className="flex items-center gap-1 text-xs bg-muted px-2 py-1 rounded"
-                                title={amenity}
-                              >
-                                {IconComponent && <IconComponent className="w-3 h-3" />}
-                                <span className="truncate max-w-[60px]">{amenity}</span>
+                        {salle.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                            {salle.description}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between text-sm mb-3">
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Users className="w-4 h-4" />
+                            {salle.capacity} pers.
+                          </div>
+                          <div className="flex items-center gap-1 font-semibold">
+                            <Euro className="w-4 h-4" />
+                            {salle.price}€/h
+                          </div>
+                        </div>
+
+                        {salle.amenities.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {salle.amenities.slice(0, 3).map((amenity) => {
+                              const IconComponent = AMENITY_ICONS[amenity]
+                              return (
+                                <div
+                                  key={amenity}
+                                  className="flex items-center gap-1 text-xs bg-muted px-2 py-1 rounded"
+                                  title={amenity}
+                                >
+                                  {IconComponent && <IconComponent className="w-3 h-3" />}
+                                  <span className="truncate max-w-[60px]">{amenity}</span>
+                                </div>
+                              )
+                            })}
+                            {salle.amenities.length > 3 && (
+                              <div className="text-xs bg-muted px-2 py-1 rounded">
+                                +{salle.amenities.length - 3}
                               </div>
-                            )
-                          })}
-                          {salle.amenities.length > 3 && (
-                            <div className="text-xs bg-muted px-2 py-1 rounded">
-                              +{salle.amenities.length - 3}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                            )}
+                          </div>
+                        )}
 
-                      <div className="text-xs text-muted-foreground">
-                        Par {salle.mairie.name}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+                        <div className="text-xs text-muted-foreground">
+                          Par {salle.mairie.name}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="h-[calc(100vh-300px)] rounded-lg overflow-hidden border">
+                <SallesMap
+                  salles={salles.map(salle => ({
+                    id: salle.id,
+                    name: salle.name,
+                    address: salle.address,
+                    city: salle.city,
+                    price: salle.price,
+                    capacity: salle.capacity,
+                    image: salle.images?.[0],
+                    mairie: salle.mairie.name
+                  }))}
+                  onSalleClick={(salleId) => {
+                    window.location.href = `/salles/${salleId}`
+                  }}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
