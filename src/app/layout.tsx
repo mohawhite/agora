@@ -5,9 +5,20 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Agora - Réservation de salles municipales',
-  description: 'Application de réservation de salles municipales pour événements',
+  title: {
+    default: 'Agora - Réservation de salles municipales',
+    template: '%s | Agora'
+  },
+  description: 'Réservez facilement des salles municipales pour vos événements. Interface simple, réservation en ligne, paiement sécurisé.',
+  keywords: ['réservation', 'salle municipale', 'événement', 'mairie', 'location', 'salle des fêtes'],
+  authors: [{ name: 'Agora' }],
+  creator: 'Agora',
+  publisher: 'Agora',
   manifest: '/manifest.json',
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://agora.com'),
+  alternates: {
+    canonical: '/',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -20,12 +31,24 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Agora',
     title: 'Agora - Réservation de salles municipales',
-    description: 'Application de réservation de salles municipales pour événements',
+    description: 'Réservez facilement des salles municipales pour vos événements. Interface simple, réservation en ligne, paiement sécurisé.',
+    locale: 'fr_FR',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Agora - Réservation de salles municipales',
-    description: 'Application de réservation de salles municipales pour événements',
+    description: 'Réservez facilement des salles municipales pour vos événements. Interface simple, réservation en ligne, paiement sécurisé.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 }
 
