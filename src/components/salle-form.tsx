@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import { ImageUpload } from "@/components/ui/image-upload"
 import { salleSchema, type SalleInput } from "@/lib/validations"
 
 interface SalleFormProps {
@@ -239,6 +240,22 @@ export function SalleForm({ initialData, onSuccess, salleId }: SalleFormProps) {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Section Images */}
+          <div className="grid gap-2">
+            <Label>Images de la salle (max 10)</Label>
+            <Controller
+              name="images"
+              control={control}
+              render={({ field }) => (
+                <ImageUpload
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  maxImages={10}
+                />
+              )}
+            />
           </div>
 
           <div className="flex items-center space-x-2">

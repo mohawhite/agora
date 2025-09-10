@@ -27,7 +27,7 @@ export const mairieSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email('Email invalide').optional().or(z.literal('')),
   website: z.string().url('URL invalide').optional().or(z.literal('')),
-  siret: z.string().optional(),
+  siret: z.string().regex(/^\d{14}$/, 'Le SIRET doit contenir exactement 14 chiffres').optional().or(z.literal('')),
 })
 
 export const salleSchema = z.object({

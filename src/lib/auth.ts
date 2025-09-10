@@ -39,7 +39,7 @@ export async function createSession(userId: string): Promise<string> {
     },
   })
 
-  // Store in Redis for fast access
+  // Store in Redis for fast access (ignore errors)
   await setSession(token, userId, expiresInSeconds)
 
   return token
@@ -62,12 +62,12 @@ export async function validateSession(token: string): Promise<{ userId: string }
     if (!session || session.expiresAt < new Date()) {
       if (session) {
         await prisma.session.delete({ where: { id: session.id } })
-        await deleteSession(token) // Clean Redis too
+        await deleteSession(token) // Clean Redis too (ignore errors)
       }
       return null
     }
 
-    // Re-cache in Redis for next time
+    // Re-cache in Redis for next time (ignore errors)
     const remainingTime = Math.floor((session.expiresAt.getTime() - Date.now()) / 1000)
     if (remainingTime > 0) {
       await setSession(token, session.userId, remainingTime)

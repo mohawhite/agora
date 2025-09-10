@@ -49,16 +49,22 @@ export async function disconnectRedis() {
 // Session management
 export async function setSession(sessionToken: string, userId: string, expiresIn: number = 3600) {
     try {
+        if (!isConnected) {
+            await connectRedis()
+        }
         await client.setEx(`session:${sessionToken}`, expiresIn, userId)
         logger.info(`Session created for user ${userId}`)
     } catch (error) {
         logger.error('Error setting session:', error)
-        throw error
+        // Ne pas throw l'erreur pour éviter de casser l'inscription
     }
 }
 
 export async function getSession(sessionToken: string): Promise<string | null> {
     try {
+        if (!isConnected) {
+            await connectRedis()
+        }
         const userId = await client.get(`session:${sessionToken}`)
         return userId
     } catch (error) {
@@ -69,11 +75,14 @@ export async function getSession(sessionToken: string): Promise<string | null> {
 
 export async function deleteSession(sessionToken: string) {
     try {
+        if (!isConnected) {
+            await connectRedis()
+        }
         await client.del(`session:${sessionToken}`)
         logger.info('Session deleted')
     } catch (error) {
         logger.error('Error deleting session:', error)
-        throw error
+        // Ne pas throw l'erreur
     }
 }
 

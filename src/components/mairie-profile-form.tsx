@@ -173,9 +173,13 @@ export function MairieProfileForm({ initialData, onSuccess }: MairieProfileFormP
             <Label htmlFor="siret">SIRET</Label>
             <Input
               id="siret"
-              placeholder="12345678901234"
+              placeholder="12345678901234 (14 chiffres)"
+              maxLength={14}
               {...register("siret")}
             />
+            <p className="text-xs text-muted-foreground">
+              Le numéro SIRET doit contenir exactement 14 chiffres (optionnel)
+            </p>
             {errors.siret && (
               <p className="text-sm text-red-500">{errors.siret.message}</p>
             )}

@@ -64,12 +64,6 @@ const navigationItems: NavigationItem[] = [
     roles: ['MAIRIE']
   },
   {
-    icon: FileText,
-    label: 'Fichiers',
-    href: '/gestion-fichiers',
-    roles: ['USER', 'MAIRIE', 'ADMIN']
-  },
-  {
     icon: User,
     label: 'Profil',
     href: '/profil',
