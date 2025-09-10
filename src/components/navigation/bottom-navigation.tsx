@@ -12,7 +12,9 @@ import {
   Building2, 
   Settings,
   PlusCircle,
-  Bell
+  Bell,
+  FileText,
+  BookOpen
 } from 'lucide-react'
 
 interface User {
@@ -60,6 +62,12 @@ const navigationItems: NavigationItem[] = [
     label: 'Réservations',
     href: '/mairie/reservations',
     roles: ['MAIRIE']
+  },
+  {
+    icon: FileText,
+    label: 'Fichiers',
+    href: '/gestion-fichiers',
+    roles: ['USER', 'MAIRIE', 'ADMIN']
   },
   {
     icon: User,
@@ -138,6 +146,16 @@ export default function BottomNavigation() {
       href: '/notifications',
       roles: ['USER', 'MAIRIE', 'ADMIN'],
       badge: notificationCount
+    })
+  }
+
+  // Ajouter la documentation API pour les développeurs
+  if (user?.role === 'ADMIN') {
+    finalItems.push({
+      icon: BookOpen,
+      label: 'API Docs',
+      href: '/docs',
+      roles: ['ADMIN']
     })
   }
 
