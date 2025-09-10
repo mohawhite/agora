@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, Users, Euro, Phone, Mail, Globe, ArrowLeft, Calendar } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { ReservationForm } from "@/components/reservation-form"
 
 interface SalleDetails {
   id: string
@@ -50,6 +51,7 @@ export default function SallePage({ params }: SallePageProps) {
   const router = useRouter()
   const [salle, setSalle] = useState<SalleDetails | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showReservationForm, setShowReservationForm] = useState(false)
 
   useEffect(() => {
     loadSalle()
@@ -144,7 +146,11 @@ export default function SallePage({ params }: SallePageProps) {
             </div>
 
             <div className="flex gap-3">
-              <Button size="lg" className="flex items-center gap-2">
+              <Button 
+                size="lg" 
+                className="flex items-center gap-2"
+                onClick={() => setShowReservationForm(true)}
+              >
                 <Calendar className="w-4 h-4" />
                 Réserver maintenant
               </Button>
@@ -228,7 +234,11 @@ export default function SallePage({ params }: SallePageProps) {
                   <div className="text-sm text-muted-foreground">par heure</div>
                 </div>
 
-                <Button className="w-full mb-4" size="lg">
+                <Button 
+                  className="w-full mb-4" 
+                  size="lg"
+                  onClick={() => setShowReservationForm(true)}
+                >
                   Faire une demande de réservation
                 </Button>
 
@@ -285,6 +295,33 @@ export default function SallePage({ params }: SallePageProps) {
             </Card>
           </div>
         </div>
+        
+        {/* Formulaire de réservation */}
+        {showReservationForm && (
+          <div className="mt-12 pt-8 border-t">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Faire une réservation</h2>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowReservationForm(false)}
+              >
+                Fermer
+              </Button>
+            </div>
+            <ReservationForm 
+              salle={{
+                id: salle.id,
+                name: salle.name,
+                price: salle.price,
+                capacity: salle.capacity
+              }}
+              onSuccess={(reservation) => {
+                setShowReservationForm(false)
+                router.push('/reservations')
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

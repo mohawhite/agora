@@ -104,10 +104,25 @@ export default function DashboardPage() {
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <Calendar className="w-5 h-5 text-purple-600" />
                 </div>
-                <h3 className="font-semibold">Réservations</h3>
+                <h3 className="font-semibold">Mes Réservations</h3>
               </div>
               <p className="text-sm text-muted-foreground">
                 Suivez vos réservations
+              </p>
+            </div>
+          </Link>
+
+          {/* Gestion réservations mairie */}
+          <Link href="/mairie/reservations">
+            <div className="bg-card rounded-lg p-6 shadow-sm border hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Calendar className="w-5 h-5 text-orange-600" />
+                </div>
+                <h3 className="font-semibold">Réservations reçues</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Gérez les demandes de réservation
               </p>
             </div>
           </Link>
