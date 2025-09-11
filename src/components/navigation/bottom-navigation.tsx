@@ -5,16 +5,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { 
-  Home, 
   Search, 
   Calendar, 
   User, 
   Building2, 
-  Settings,
   PlusCircle,
-  Bell,
-  FileText,
-  BookOpen
+  Heart,
+  MessageCircle
 } from 'lucide-react'
 
 interface User {
@@ -33,17 +30,18 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
-  {
-    icon: Home,
-    label: 'Accueil',
-    href: '/dashboard',
-    roles: ['USER', 'MAIRIE', 'ADMIN']
-  },
+  // Pour les utilisateurs
   {
     icon: Search,
-    label: 'Rechercher',
+    label: 'Explorer',
     href: '/salles',
-    roles: ['USER', 'MAIRIE', 'ADMIN']
+    roles: ['USER']
+  },
+  {
+    icon: Heart,
+    label: 'Favoris',
+    href: '/favoris',
+    roles: ['USER']
   },
   {
     icon: Calendar,
@@ -52,9 +50,28 @@ const navigationItems: NavigationItem[] = [
     roles: ['USER']
   },
   {
+    icon: MessageCircle,
+    label: 'Messages',
+    href: '/messages',
+    roles: ['USER']
+  },
+  {
+    icon: User,
+    label: 'Profil',
+    href: '/profil',
+    roles: ['USER']
+  },
+  // Pour les mairies
+  {
     icon: Building2,
     label: 'Mes Salles',
     href: '/mairie/salles',
+    roles: ['MAIRIE']
+  },
+  {
+    icon: PlusCircle,
+    label: 'Ajouter',
+    href: '/mairie/salles/new',
     roles: ['MAIRIE']
   },
   {
@@ -67,42 +84,43 @@ const navigationItems: NavigationItem[] = [
     icon: User,
     label: 'Profil',
     href: '/profil',
-    roles: ['USER', 'MAIRIE', 'ADMIN']
+    roles: ['MAIRIE']
   }
 ]
 
 export default function BottomNavigation() {
   const [user, setUser] = useState<User | null>(null)
-  const [notificationCount, setNotificationCount] = useState(0)
+  const [loading, setLoading] = useState(true)
   const pathname = usePathname()
 
   useEffect(() => {
     loadUser()
-    loadNotificationCount()
   }, [])
+
+  // Reload user data when pathname changes (after login redirect)
+  useEffect(() => {
+    if (pathname.startsWith('/mairie/') || pathname === '/salles' || pathname === '/reservations') {
+      loadUser()
+    }
+  }, [pathname])
 
   const loadUser = async () => {
     try {
-      const response = await fetch('/api/user/me')
+      const response = await fetch('/api/user/me', {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
       }
     } catch (error) {
       console.error('Error loading user:', error)
-    }
-  }
-
-  const loadNotificationCount = async () => {
-    try {
-      const response = await fetch('/api/notifications?limit=100')
-      if (response.ok) {
-        const data = await response.json()
-        const unreadCount = data.notifications?.filter((n: any) => !n.read).length || 0
-        setNotificationCount(unreadCount)
-      }
-    } catch (error) {
-      console.error('Error loading notifications:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -111,102 +129,47 @@ export default function BottomNavigation() {
     return null
   }
 
+  // Ne pas afficher si nous sommes en train de charger ou si aucun utilisateur
+  if (loading || !user) {
+    return null
+  }
+
   // Filtrer les éléments de navigation selon le rôle utilisateur
   const filteredItems = navigationItems.filter(item => 
-    user && item.roles.includes(user.role)
+    item.roles.includes(user.role)
   )
 
-  // Ajout conditionnel d'éléments spéciaux
-  const finalItems = [...filteredItems]
-
-  // Ajouter le bouton "Ajouter" pour les mairies
-  if (user?.role === 'MAIRIE') {
-    const addButtonIndex = finalItems.findIndex(item => item.href === '/mairie/salles')
-    if (addButtonIndex !== -1) {
-      finalItems.splice(addButtonIndex + 1, 0, {
-        icon: PlusCircle,
-        label: 'Ajouter',
-        href: '/mairie/salles/new',
-        roles: ['MAIRIE']
-      })
-    }
-  }
-
-  // Ajouter les notifications si il y en a
-  if (notificationCount > 0) {
-    finalItems.unshift({
-      icon: Bell,
-      label: 'Notifications',
-      href: '/notifications',
-      roles: ['USER', 'MAIRIE', 'ADMIN'],
-      badge: notificationCount
-    })
-  }
-
-  // Ajouter la documentation API pour les développeurs
-  if (user?.role === 'ADMIN') {
-    finalItems.push({
-      icon: BookOpen,
-      label: 'API Docs',
-      href: '/docs',
-      roles: ['ADMIN']
-    })
-  }
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
-      <div className="max-w-screen-xl mx-auto px-4">
-        <div className="flex items-center justify-around py-2">
-          {finalItems.map((item, index) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href || 
-              (pathname.startsWith(item.href) && item.href !== '/dashboard')
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <div className="flex items-center justify-around py-2 px-4">
+        {filteredItems.map((item, index) => {
+          const Icon = item.icon
+          // Logique spéciale pour les pages /new - seule l'icône "Ajouter" doit être active
+          const isActive = pathname.includes('/new') 
+            ? item.href.includes('/new') 
+            : (pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/'))
 
-            return (
-              <Link
-                key={`${item.href}-${index}`}
-                href={item.href}
-                className={cn(
-                  "flex flex-col items-center justify-center min-w-0 flex-1 py-2 px-1 text-xs relative",
-                  "transition-colors duration-200 ease-in-out",
-                  isActive 
-                    ? "text-primary" 
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <div className="relative">
-                  <Icon className={cn(
-                    "w-5 h-5 mb-1",
-                    isActive && "text-primary"
-                  )} />
-                  
-                  {/* Badge pour les notifications */}
-                  {item.badge && item.badge > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
-                      {item.badge > 99 ? '99+' : item.badge}
-                    </span>
-                  )}
-                </div>
-                
-                <span className={cn(
-                  "truncate text-center leading-tight max-w-full",
-                  isActive && "font-medium"
-                )}>
-                  {item.label}
-                </span>
-                
-                {/* Indicateur actif */}
-                {isActive && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
-                )}
-              </Link>
-            )
-          })}
-        </div>
+          return (
+            <Link
+              key={`${item.href}-${index}`}
+              href={item.href}
+              className="flex flex-col items-center justify-center min-w-0 flex-1 py-2 px-1"
+            >
+              <Icon className={cn(
+                "w-4 h-4 mb-1",
+                isActive ? "text-primary" : "text-gray-500"
+              )} />
+              
+              <span className={cn(
+                "text-xs text-center",
+                isActive ? "font-medium text-primary" : "text-gray-500"
+              )}>
+                {item.label}
+              </span>
+            </Link>
+          )
+        })}
       </div>
-      
-      {/* Espace de sécurité pour les notch sur mobile */}
-      <div className="h-safe-area-inset-bottom bg-background" />
     </nav>
   )
 }

@@ -24,7 +24,7 @@ export default function MairieProfilePage() {
           return
         }
         if (response.status === 403) {
-          redirect('/dashboard')
+          redirect('/salles')
           return
         }
       }

@@ -24,6 +24,8 @@ export function ImageUpload({
   const [dragActive, setDragActive] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleDrag = (e: React.DragEvent) => {
@@ -101,6 +103,38 @@ export function ImageUpload({
     onChange?.(newUrls)
   }
 
+  const handleImageDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleImageDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverIndex(index)
+  }
+
+  const handleImageDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleImageDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      return
+    }
+
+    const newUrls = [...value]
+    const [removed] = newUrls.splice(draggedIndex, 1)
+    newUrls.splice(dropIndex, 0, removed)
+    
+    onChange?.(newUrls)
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
   return (
     <div className={cn("w-full space-y-4", className)}>
       {/* Zone de drop */}
@@ -157,34 +191,52 @@ export function ImageUpload({
 
       {/* Grille d'images */}
       {value.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {value.map((url, index) => (
-            <div
-              key={index}
-              className="relative group aspect-square rounded-lg overflow-hidden border bg-muted"
-            >
-              <img
-                src={url}
-                alt={`Image ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => removeImage(index)}
-                  className="text-white"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Glissez les images pour les réorganiser. La première image sera l'image principale.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {value.map((url, index) => (
+              <div
+                key={index}
+                draggable
+                onDragStart={(e) => handleImageDragStart(e, index)}
+                onDragOver={(e) => handleImageDragOver(e, index)}
+                onDragEnd={handleImageDragEnd}
+                onDrop={(e) => handleImageDrop(e, index)}
+                className={cn(
+                  "relative group aspect-square rounded-lg overflow-hidden border bg-muted cursor-move transition-all",
+                  draggedIndex === index && "opacity-50 scale-95",
+                  dragOverIndex === index && draggedIndex !== null && draggedIndex !== index && "border-primary border-2 scale-105",
+                  index === 0 && "ring-2 ring-primary ring-offset-2"
+                )}
+              >
+                <img
+                  src={url}
+                  alt={`Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeImage(index)
+                    }}
+                    className="text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="absolute top-2 right-2">
+                  <Badge variant={index === 0 ? "default" : "secondary"} className="text-xs">
+                    {index === 0 ? "Principal" : index + 1}
+                  </Badge>
+                </div>
               </div>
-              <div className="absolute top-2 right-2">
-                <Badge variant="secondary" className="text-xs">
-                  {index + 1}
-                </Badge>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

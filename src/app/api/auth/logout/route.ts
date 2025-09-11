@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { deleteSession } from '@/lib/auth'
+import { destroySession } from '@/lib/auth'
 import logger from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const sessionToken = request.cookies.get('session')?.value
 
     if (sessionToken) {
-      await deleteSession(sessionToken)
+      await destroySession(sessionToken)
     }
 
     logger.info('Déconnexion effectuée')

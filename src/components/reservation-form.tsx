@@ -179,41 +179,35 @@ export function ReservationForm({ salle, onSuccess }: ReservationFormProps) {
                                             watchedValues.endDate, watchedValues.endTime)
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Réserver {salle.name}
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <div className="w-full">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           
           {/* Date et heure de début */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Date de début</Label>
+              <Label htmlFor="startDate" className="text-sm font-medium">Date de début</Label>
               <Input
                 id="startDate"
                 type="date"
                 min={format(addDays(new Date(), 1), 'yyyy-MM-dd')}
+                className="text-sm"
                 {...register("startDate")}
               />
               {errors.startDate && (
-                <p className="text-sm text-red-500">{errors.startDate.message}</p>
+                <p className="text-xs text-red-500">{errors.startDate.message}</p>
               )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="startTime">Heure de début</Label>
+              <Label htmlFor="startTime" className="text-sm font-medium">Heure de début</Label>
               <Input
                 id="startTime"
                 type="time"
+                className="text-sm"
                 {...register("startTime")}
               />
               {errors.startTime && (
-                <p className="text-sm text-red-500">{errors.startTime.message}</p>
+                <p className="text-xs text-red-500">{errors.startTime.message}</p>
               )}
             </div>
           </div>
@@ -221,35 +215,37 @@ export function ReservationForm({ salle, onSuccess }: ReservationFormProps) {
           {/* Date et heure de fin */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="endDate">Date de fin</Label>
+              <Label htmlFor="endDate" className="text-sm font-medium">Date de fin</Label>
               <Input
                 id="endDate"
                 type="date"
                 min={format(addDays(new Date(), 1), 'yyyy-MM-dd')}
+                className="text-sm"
                 {...register("endDate")}
               />
               {errors.endDate && (
-                <p className="text-sm text-red-500">{errors.endDate.message}</p>
+                <p className="text-xs text-red-500">{errors.endDate.message}</p>
               )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="endTime">Heure de fin</Label>
+              <Label htmlFor="endTime" className="text-sm font-medium">Heure de fin</Label>
               <Input
                 id="endTime"
                 type="time"
+                className="text-sm"
                 {...register("endTime")}
               />
               {errors.endTime && (
-                <p className="text-sm text-red-500">{errors.endTime.message}</p>
+                <p className="text-xs text-red-500">{errors.endTime.message}</p>
               )}
             </div>
           </div>
 
           {/* Alerte conflit */}
           {isConflicting && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-sm">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-red-800 text-xs">
                 ⚠️ Ce créneau est déjà réservé. Veuillez choisir une autre période.
               </p>
             </div>
@@ -257,25 +253,26 @@ export function ReservationForm({ salle, onSuccess }: ReservationFormProps) {
 
           {/* Résumé de la réservation */}
           {duration > 0 && !isConflicting && (
-            <div className="bg-muted rounded-lg p-4">
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                <Euro className="w-4 h-4" />
+            <div className="bg-gray-50 rounded-lg p-3">
+              <h3 className="font-medium mb-2 flex items-center gap-2 text-sm">
+                <Euro className="w-3 h-3" />
                 Résumé de votre réservation
               </h3>
-              <div className="space-y-1 text-sm">
+              <div className="space-y-1 text-xs">
                 <p><strong>Durée:</strong> {duration} heure{duration > 1 ? 's' : ''}</p>
                 <p><strong>Prix par heure:</strong> {salle.price}€</p>
-                <p><strong>Total:</strong> <span className="text-lg font-semibold text-primary">{totalPrice}€</span></p>
+                <p><strong>Total:</strong> <span className="text-sm font-semibold text-primary">{totalPrice}€</span></p>
               </div>
             </div>
           )}
 
           {/* Message optionnel */}
           <div className="space-y-2">
-            <Label htmlFor="message">Message pour la mairie (optionnel)</Label>
+            <Label htmlFor="message" className="text-sm font-medium">Message pour la mairie (optionnel)</Label>
             <Textarea
               id="message"
               placeholder="Décrivez votre événement, vos besoins particuliers..."
+              className="text-sm min-h-[80px]"
               {...register("message")}
             />
           </div>
@@ -284,18 +281,16 @@ export function ReservationForm({ salle, onSuccess }: ReservationFormProps) {
           <Button 
             type="submit" 
             className="w-full" 
-            size="lg"
             disabled={isLoading || isConflicting || duration === 0}
           >
             {isLoading ? 'Envoi en cours...' : 'Envoyer la demande de réservation'}
           </Button>
 
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="text-center text-xs text-gray-500">
             <p>Votre demande sera examinée par la mairie.</p>
             <p>Vous recevrez une confirmation par email.</p>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+      </form>
+    </div>
   )
 }

@@ -28,6 +28,7 @@ model User {
   sessions          Session[]
   notifications     Notification[]
   pushSubscriptions PushSubscription[]
+  favorites         Favorite[]
   
   @@map("users")
 }
@@ -78,6 +79,7 @@ model Salle {
   mairie        Mairie        @relation(fields: [mairieId], references: [id], onDelete: Cascade)
   reservations  Reservation[]
   disponibilites Disponibilite[]
+  favorites     Favorite[]
 
   @@map("salles")
 }
@@ -206,4 +208,18 @@ model PushSubscription {
 
   @@unique([userId, endpoint])
   @@map("push_subscriptions")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salleId String
+  salle   Salle  @relation(fields: [salleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, salleId])
+  @@map("favorites")
 }

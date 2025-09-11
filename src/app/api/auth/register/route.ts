@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { email, password, firstName, lastName, phone, role } = result.data
+    const { email, password, firstName, lastName, phone, role, mairieNom, mairieAdresse, mairieVille, mairieCodePostal, mairiePhone } = result.data
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({
@@ -34,17 +34,52 @@ export async function POST(request: NextRequest) {
     // Hasher le mot de passe
     const hashedPassword = await hashPassword(password)
 
-    // Créer l'utilisateur
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        phone: phone || null,
-        role,
-      }
-    })
+    let user;
+
+    if (role === 'MAIRIE') {
+      // Créer l'utilisateur et la mairie en une transaction
+      const result = await prisma.$transaction(async (prisma) => {
+        // Créer l'utilisateur
+        const newUser = await prisma.user.create({
+          data: {
+            email,
+            password: hashedPassword,
+            firstName: 'Mairie',
+            lastName: 'Admin',
+            phone: mairiePhone || null,
+            role,
+          }
+        })
+
+        // Créer la mairie
+        const mairie = await prisma.mairie.create({
+          data: {
+            name: mairieNom!,
+            address: mairieAdresse!,
+            city: mairieVille!,
+            postalCode: mairieCodePostal!,
+            phone: mairiePhone || null,
+            userId: newUser.id,
+          }
+        })
+
+        return { user: newUser, mairie }
+      })
+
+      user = result.user
+    } else {
+      // Créer l'utilisateur normal
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          firstName: firstName!,
+          lastName: lastName!,
+          phone: phone || null,
+          role,
+        }
+      })
+    }
 
     // Créer une session
     const token = await createSession(user.id)

@@ -80,7 +80,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
       </head>
       <body className={inter.className}>
-        <main className="pb-16 md:pb-0">
+        <main>
           {children}
         </main>
         <BottomNavigation />

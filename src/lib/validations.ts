@@ -9,13 +9,38 @@ export const registerSchema = z.object({
   email: z.string().email('Email invalide').min(1, 'Email requis'),
   password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
   confirmPassword: z.string().min(1, 'Confirmation du mot de passe requise'),
-  firstName: z.string().min(1, 'Prénom requis'),
-  lastName: z.string().min(1, 'Nom requis'),
-  phone: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  phone: z.string().optional().or(z.literal('')),
   role: z.enum(['USER', 'MAIRIE']).default('USER'),
+  // Champs pour les mairies
+  mairieNom: z.string().optional(),
+  mairieAdresse: z.string().optional(),
+  mairieVille: z.string().optional(),
+  mairieCodePostal: z.string().optional(),
+  mairiePhone: z.string().optional().or(z.literal('')),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Les mots de passe ne correspondent pas',
   path: ['confirmPassword'],
+}).refine((data) => {
+  if (data.role === 'USER') {
+    return data.firstName && data.firstName.length > 0 && data.lastName && data.lastName.length > 0
+  }
+  return true
+}, {
+  message: 'Prénom et nom requis pour les utilisateurs',
+  path: ['firstName'],
+}).refine((data) => {
+  if (data.role === 'MAIRIE') {
+    return data.mairieNom && data.mairieNom.length > 0 && 
+           data.mairieAdresse && data.mairieAdresse.length > 0 &&
+           data.mairieVille && data.mairieVille.length > 0 &&
+           data.mairieCodePostal && data.mairieCodePostal.length === 5
+  }
+  return true
+}, {
+  message: 'Informations de la mairie requises',
+  path: ['mairieNom'],
 })
 
 export const mairieSchema = z.object({

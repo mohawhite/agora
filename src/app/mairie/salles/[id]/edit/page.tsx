@@ -14,16 +14,22 @@ export default function EditSallePage({ params }: EditSallePageProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('EditSallePage mounted, params.id:', params.id)
     loadSalle()
   }, [params.id])
 
   const loadSalle = async () => {
     try {
+      console.log('Loading salle with ID:', params.id)
       const response = await fetch(`/api/salles/${params.id}`)
+      console.log('Response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Salle data loaded:', data.salle)
         setSalleData(data.salle)
       } else {
+        console.error('Failed to load salle, status:', response.status)
         alert('Salle non trouvée')
         router.push('/mairie/salles')
       }

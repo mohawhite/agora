@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       })
 
       if (!userData) {
+        logger.warn(`User not found in database for ID: ${user.id}`)
         return NextResponse.json(
           { error: 'Utilisateur non trouvé' },
           { status: 404 }

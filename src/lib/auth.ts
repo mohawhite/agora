@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from './prisma'
-import { setSession, getSession, deleteSession } from './redis'
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret'
 
@@ -28,7 +27,6 @@ export function verifyToken(token: string): { userId: string } | null {
 export async function createSession(userId: string): Promise<string> {
   const token = generateToken(userId)
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-  const expiresInSeconds = 7 * 24 * 60 * 60 // 7 days in seconds
 
   // Store in PostgreSQL
   await prisma.session.create({
@@ -39,21 +37,12 @@ export async function createSession(userId: string): Promise<string> {
     },
   })
 
-  // Store in Redis for fast access (ignore errors)
-  await setSession(token, userId, expiresInSeconds)
-
   return token
 }
 
 export async function validateSession(token: string): Promise<{ userId: string } | null> {
   try {
-    // Check Redis first for performance
-    const cachedUserId = await getSession(token)
-    if (cachedUserId) {
-      return { userId: cachedUserId }
-    }
-
-    // Fallback to PostgreSQL
+    // Check PostgreSQL session
     const session = await prisma.session.findUnique({
       where: { token },
       include: { user: true },
@@ -62,15 +51,8 @@ export async function validateSession(token: string): Promise<{ userId: string }
     if (!session || session.expiresAt < new Date()) {
       if (session) {
         await prisma.session.delete({ where: { id: session.id } })
-        await deleteSession(token) // Clean Redis too (ignore errors)
       }
       return null
-    }
-
-    // Re-cache in Redis for next time (ignore errors)
-    const remainingTime = Math.floor((session.expiresAt.getTime() - Date.now()) / 1000)
-    if (remainingTime > 0) {
-      await setSession(token, session.userId, remainingTime)
     }
 
     return { userId: session.userId }
@@ -81,11 +63,10 @@ export async function validateSession(token: string): Promise<{ userId: string }
 
 export async function destroySession(token: string): Promise<void> {
   try {
-    // Delete from both PostgreSQL and Redis
+    // Delete from PostgreSQL
     await prisma.session.delete({
       where: { token },
     })
-    await deleteSession(token)
   } catch {
     // Session might not exist
   }

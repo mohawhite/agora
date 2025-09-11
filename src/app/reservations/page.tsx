@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { MapPin, Calendar, Clock, Euro, User, Building2, Phone, Mail, X, Check, CreditCard } from "lucide-react"
+import { MapPin, Calendar, Clock, Euro, Building2, Phone, Mail, X, Check, CreditCard, GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import BottomNavigation from "@/components/navigation/bottom-navigation"
 
 interface Reservation {
   id: string
@@ -66,6 +67,7 @@ const STATUS_CONFIG = {
 }
 
 export default function ReservationsPage() {
+  const router = useRouter()
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
@@ -126,200 +128,246 @@ export default function ReservationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement des réservations...</p>
+      <div className="min-h-screen">
+        <div className="grid min-h-svh lg:grid-cols-2">
+          <div className="flex flex-col gap-4 p-6 md:p-10">
+            <div className="flex justify-center gap-2 md:justify-start">
+              <a href="#" className="flex items-center gap-2 font-medium">
+                <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+                  <GalleryVerticalEnd className="size-4" />
+                </div>
+                Agora
+              </a>
+            </div>
+            <div className="flex flex-1 items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Chargement des réservations...</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-muted relative hidden lg:block">
+            <img
+              src="/placeholder.svg"
+              alt="Image"
+              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+            />
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-2">Mes réservations</h1>
-          <p className="text-muted-foreground">
-            Suivez l'état de vos demandes de réservation
-          </p>
-        </div>
+    <div className="min-h-screen">
+      <div className="grid min-h-svh lg:grid-cols-2">
+        <div className="flex flex-col gap-4 p-6 md:p-10">
+          <div className="flex justify-center gap-2 md:justify-start">
+            <a href="#" className="flex items-center gap-2 font-medium">
+              <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+                <GalleryVerticalEnd className="size-4" />
+              </div>
+              Agora
+            </a>
+          </div>
+          
+          <div className="flex flex-1 flex-col">
+            {/* En-tête */}
+            <div className="mb-6 text-center">
+              <h1 className="text-2xl font-bold mb-2">Mes réservations</h1>
+              <p className="text-muted-foreground text-sm">
+                Suivez l'état de vos demandes de réservation
+              </p>
+            </div>
 
-        {/* Filtres */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <Button
-            variant={filter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('all')}
-          >
-            Toutes ({reservations.length})
-          </Button>
-          {Object.entries(STATUS_CONFIG).map(([status, config]) => {
-            const count = reservations.filter(r => r.status === status).length
-            return (
+            {/* Filtres */}
+            <div className="flex flex-wrap gap-2 mb-6 justify-center">
               <Button
-                key={status}
-                variant={filter === status ? 'default' : 'outline'}
+                variant={filter === 'all' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilter(status)}
+                onClick={() => setFilter('all')}
+                className="text-xs"
               >
-                {config.label} ({count})
+                Toutes ({reservations.length})
               </Button>
-            )
-          })}
-        </div>
-
-        {filteredReservations.length === 0 ? (
-          <div className="text-center py-12">
-            <Card>
-              <CardContent className="p-8">
-                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-lg font-semibold mb-2">
-                  {filter === 'all' 
-                    ? 'Aucune réservation'
-                    : `Aucune réservation ${STATUS_CONFIG[filter as keyof typeof STATUS_CONFIG]?.label.toLowerCase()}`
-                  }
-                </h2>
-                <p className="text-muted-foreground mb-4">
-                  {filter === 'all'
-                    ? 'Vous n\'avez pas encore fait de réservation.'
-                    : 'Aucune réservation ne correspond à ce filtre.'
-                  }
-                </p>
-                {filter === 'all' && (
-                  <Button asChild>
-                    <a href="/salles">Rechercher des salles</a>
+              {Object.entries(STATUS_CONFIG).map(([status, config]) => {
+                const count = reservations.filter(r => r.status === status).length
+                return (
+                  <Button
+                    key={status}
+                    variant={filter === status ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilter(status)}
+                    className="text-xs"
+                  >
+                    {config.label} ({count})
                   </Button>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredReservations.map((reservation) => {
-              const statusConfig = STATUS_CONFIG[reservation.status]
-              const StatusIcon = statusConfig.icon
-              
-              return (
-                <Card key={reservation.id} className="overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold">{reservation.salle.name}</h3>
-                          <Badge className={statusConfig.color}>
-                            <StatusIcon className="w-3 h-3 mr-1" />
-                            {statusConfig.label}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            {reservation.salle.address}, {reservation.salle.city}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Building2 className="w-4 h-4" />
-                            {reservation.salle.mairie.name}
-                          </div>
-                        </div>
+                )
+              })}
+            </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <div className="font-medium">
-                                {format(new Date(reservation.startDate), 'dd MMMM yyyy', { locale: fr })}
+            {/* Contenu principal */}
+            <div className="flex-1 overflow-y-auto pb-20">
+              {filteredReservations.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+                    <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+                    <h2 className="text-xl font-semibold mb-3 text-gray-900">
+                      {filter === 'all' 
+                        ? 'Aucune réservation'
+                        : `Aucune réservation ${STATUS_CONFIG[filter as keyof typeof STATUS_CONFIG]?.label.toLowerCase()}`
+                      }
+                    </h2>
+                    <p className="text-gray-600 mb-6">
+                      {filter === 'all'
+                        ? 'Vous n\'avez pas encore fait de réservation.'
+                        : 'Aucune réservation ne correspond à ce filtre.'
+                      }
+                    </p>
+                    {filter === 'all' && (
+                      <Button asChild>
+                        <a href="/salles">Rechercher des salles</a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredReservations.map((reservation) => {
+                    const statusConfig = STATUS_CONFIG[reservation.status]
+                    const StatusIcon = statusConfig.icon
+                    
+                    return (
+                      <div key={reservation.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <h3 className="text-xl font-semibold text-gray-900">{reservation.salle.name}</h3>
+                              <Badge className={`${statusConfig.color} text-xs font-medium`}>
+                                <StatusIcon className="w-3 h-3 mr-1" />
+                                {statusConfig.label}
+                              </Badge>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {reservation.salle.address}, {reservation.salle.city}
                               </div>
-                              <div className="text-muted-foreground">
-                                {format(new Date(reservation.startDate), 'HH:mm')} - {format(new Date(reservation.endDate), 'HH:mm')}
+                              <div className="flex items-center gap-1">
+                                <Building2 className="w-3 h-3" />
+                                {reservation.salle.mairie.name}
                               </div>
                             </div>
-                          </div>
 
-                          <div className="flex items-center gap-2 text-sm">
-                            <Euro className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <div className="font-medium">{reservation.totalPrice}€</div>
-                              <div className="text-muted-foreground">Total</div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 text-sm">
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                            <div>
-                              <div className="font-medium">
-                                {format(new Date(reservation.createdAt), 'dd/MM/yyyy')}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                              <div className="flex items-start gap-3">
+                                <Calendar className="w-4 h-4 text-gray-500 mt-0.5" />
+                                <div>
+                                  <div className="font-semibold text-gray-900">
+                                    {format(new Date(reservation.startDate), 'dd MMMM yyyy', { locale: fr })}
+                                  </div>
+                                  <div className="text-gray-600 text-sm">
+                                    {format(new Date(reservation.startDate), 'HH:mm')} - {format(new Date(reservation.endDate), 'HH:mm')}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-muted-foreground">Demandée le</div>
-                            </div>
-                          </div>
-                        </div>
 
-                        {reservation.message && (
-                          <div className="bg-muted p-3 rounded-lg mb-4">
-                            <p className="text-sm"><strong>Message:</strong> {reservation.message}</p>
-                          </div>
-                        )}
+                              <div className="flex items-start gap-3">
+                                <Euro className="w-4 h-4 text-gray-500 mt-0.5" />
+                                <div>
+                                  <div className="font-semibold text-gray-900">{reservation.totalPrice}€</div>
+                                  <div className="text-gray-600 text-sm">Total</div>
+                                </div>
+                              </div>
 
-                        {/* Contact mairie */}
-                        <div className="flex flex-wrap gap-4 text-sm">
-                          {reservation.salle.mairie.phone && (
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <Phone className="w-3 h-3" />
-                              {reservation.salle.mairie.phone}
+                              <div className="flex items-start gap-3">
+                                <Clock className="w-4 h-4 text-gray-500 mt-0.5" />
+                                <div>
+                                  <div className="font-semibold text-gray-900">
+                                    {format(new Date(reservation.createdAt), 'dd/MM/yyyy')}
+                                  </div>
+                                  <div className="text-gray-600 text-sm">Demandée le</div>
+                                </div>
+                              </div>
                             </div>
-                          )}
-                          {reservation.salle.mairie.email && (
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                              <Mail className="w-3 h-3" />
-                              {reservation.salle.mairie.email}
-                            </div>
-                          )}
-                        </div>
-                      </div>
 
-                      {/* Actions */}
-                      <div className="flex flex-col gap-2 ml-4">
-                        {reservation.status === 'PENDING' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusChange(reservation.id, 'CANCELLED')}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            Annuler
-                          </Button>
-                        )}
-                        {reservation.status === 'CONFIRMED' && (
-                          <>
-                            {(!reservation.payment || reservation.payment.status !== 'COMPLETED') && (
-                              <Link href={`/reservations/${reservation.id}/paiement`}>
-                                <Button size="sm" className="w-full mb-2">
-                                  <CreditCard className="w-4 h-4 mr-1" />
-                                  Payer
-                                </Button>
-                              </Link>
+                            {reservation.message && (
+                              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+                                <p className="text-sm text-blue-800"><strong>Message:</strong> {reservation.message}</p>
+                              </div>
                             )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleStatusChange(reservation.id, 'CANCELLED')}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              Annuler
-                            </Button>
-                          </>
-                        )}
+
+                            {/* Contact mairie */}
+                            <div className="flex flex-wrap gap-6 text-sm">
+                              {reservation.salle.mairie.phone && (
+                                <div className="flex items-center gap-2 text-gray-600">
+                                  <Phone className="w-4 h-4" />
+                                  <span>{reservation.salle.mairie.phone}</span>
+                                </div>
+                              )}
+                              {reservation.salle.mairie.email && (
+                                <div className="flex items-center gap-2 text-gray-600">
+                                  <Mail className="w-4 h-4" />
+                                  <span>{reservation.salle.mairie.email}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex flex-col gap-3 ml-6">
+                            {reservation.status === 'PENDING' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleStatusChange(reservation.id, 'CANCELLED')}
+                                className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
+                              >
+                                Annuler
+                              </Button>
+                            )}
+                            {reservation.status === 'CONFIRMED' && (
+                              <>
+                                {(!reservation.payment || reservation.payment.status !== 'COMPLETED') && (
+                                  <Link href={`/reservations/${reservation.id}/paiement`}>
+                                    <Button size="sm" className="w-full">
+                                      <CreditCard className="w-4 h-4 mr-2" />
+                                      Payer
+                                    </Button>
+                                  </Link>
+                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleStatusChange(reservation.id, 'CANCELLED')}
+                                  className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400 w-full"
+                                >
+                                  Annuler
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
+        
+        <div className="bg-muted relative hidden lg:block">
+          <img
+            src="/placeholder.svg"
+            alt="Image"
+            className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          />
+        </div>
       </div>
+      
+      <BottomNavigation />
     </div>
   )
 }

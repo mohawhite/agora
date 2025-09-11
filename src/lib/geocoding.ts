@@ -16,12 +16,12 @@ export interface ReverseGeocodingResult {
   country?: string
 }
 
-// Geocoding: adresse → coordonnées
+// Geocoding: adresse → coordonnées avec l'API Adresse du gouvernement français
 export async function geocodeAddress(address: string): Promise<GeocodingResult | null> {
   try {
     const encodedAddress = encodeURIComponent(address)
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=fr`,
+      `https://api-adresse.data.gouv.fr/search/?q=${encodedAddress}&limit=1`,
       {
         headers: {
           'User-Agent': 'Agora/1.0 (contact@agora.com)'
@@ -35,23 +35,22 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
 
     const data = await response.json()
     
-    if (data.length === 0) {
+    if (!data.features || data.features.length === 0) {
       logger.warn(`No geocoding results found for address: ${address}`)
       return null
     }
 
-    const result = data[0]
-    
-    // Parse address components
-    const addressParts = result.display_name.split(', ')
+    const result = data.features[0]
+    const properties = result.properties
+    const coordinates = result.geometry.coordinates
     
     return {
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
-      address: result.display_name,
-      city: extractCity(addressParts),
-      postalCode: extractPostalCode(addressParts),
-      country: extractCountry(addressParts)
+      lat: coordinates[1], // Latitude
+      lng: coordinates[0], // Longitude
+      address: properties.label, // Adresse complète
+      city: properties.city,
+      postalCode: properties.postcode,
+      country: 'France'
     }
   } catch (error) {
     logger.error('Geocoding error:', error)
@@ -59,11 +58,11 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
   }
 }
 
-// Reverse geocoding: coordonnées → adresse
+// Reverse geocoding: coordonnées → adresse avec l'API Adresse du gouvernement français
 export async function reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodingResult | null> {
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+      `https://api-adresse.data.gouv.fr/reverse/?lat=${lat}&lon=${lng}&limit=1`,
       {
         headers: {
           'User-Agent': 'Agora/1.0 (contact@agora.com)'
@@ -77,18 +76,19 @@ export async function reverseGeocode(lat: number, lng: number): Promise<ReverseG
 
     const data = await response.json()
     
-    if (!data.display_name) {
+    if (!data.features || data.features.length === 0) {
       logger.warn(`No reverse geocoding results found for coordinates: ${lat}, ${lng}`)
       return null
     }
 
-    const address = data.address || {}
+    const result = data.features[0]
+    const properties = result.properties
     
     return {
-      address: data.display_name,
-      city: address.city || address.town || address.village || address.municipality,
-      postalCode: address.postcode,
-      country: address.country
+      address: properties.label,
+      city: properties.city,
+      postalCode: properties.postcode,
+      country: 'France'
     }
   } catch (error) {
     logger.error('Reverse geocoding error:', error)
@@ -96,12 +96,12 @@ export async function reverseGeocode(lat: number, lng: number): Promise<ReverseG
   }
 }
 
-// Recherche de lieux par nom
+// Recherche de lieux par nom avec l'API Adresse du gouvernement français
 export async function searchPlaces(query: string, limit: number = 5): Promise<GeocodingResult[]> {
   try {
     const encodedQuery = encodeURIComponent(query)
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=${limit}&countrycodes=fr&addressdetails=1`,
+      `https://api-adresse.data.gouv.fr/search/?q=${encodedQuery}&limit=${limit}&type=housenumber`,
       {
         headers: {
           'User-Agent': 'Agora/1.0 (contact@agora.com)'
@@ -115,16 +115,17 @@ export async function searchPlaces(query: string, limit: number = 5): Promise<Ge
 
     const data = await response.json()
     
-    return data.map((result: any) => {
-      const addressParts = result.display_name.split(', ')
+    return (data.features || []).map((result: any) => {
+      const properties = result.properties
+      const coordinates = result.geometry.coordinates
       
       return {
-        lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon),
-        address: result.display_name,
-        city: extractCity(addressParts),
-        postalCode: extractPostalCode(addressParts),
-        country: extractCountry(addressParts)
+        lat: coordinates[1], // Latitude
+        lng: coordinates[0], // Longitude  
+        address: properties.label, // Adresse complète
+        city: properties.city,
+        postalCode: properties.postcode,
+        country: 'France'
       }
     })
   } catch (error) {
@@ -158,36 +159,7 @@ function toRadians(degrees: number): number {
   return degrees * (Math.PI / 180)
 }
 
-// Fonctions utilitaires pour extraire les composants d'adresse
-function extractCity(addressParts: string[]): string | undefined {
-  // Recherche de patterns typiques pour les villes françaises
-  for (const part of addressParts) {
-    if (part.match(/^\d{5}/)) {
-      // Si on trouve un code postal, la ville est généralement juste après
-      const index = addressParts.indexOf(part)
-      if (index > 0) {
-        return addressParts[index - 1]
-      }
-    }
-  }
-  
-  // Fallback: prendre le 3ème élément s'il existe
-  return addressParts[2]
-}
-
-function extractPostalCode(addressParts: string[]): string | undefined {
-  for (const part of addressParts) {
-    if (part.match(/^\d{5}$/)) {
-      return part
-    }
-  }
-  return undefined
-}
-
-function extractCountry(addressParts: string[]): string | undefined {
-  // Le pays est généralement le dernier élément
-  return addressParts[addressParts.length - 1]
-}
+// Ces fonctions ne sont plus nécessaires car l'API Adresse retourne directement les données structurées
 
 // Valider que les coordonnées sont en France
 export function isInFrance(lat: number, lng: number): boolean {

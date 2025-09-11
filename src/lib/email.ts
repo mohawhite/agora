@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import logger from './logger'
 
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.MAILTRAP_HOST,
   port: parseInt(process.env.MAILTRAP_PORT || '2525'),
   auth: {

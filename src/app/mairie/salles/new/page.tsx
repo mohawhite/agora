@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { SalleForm } from "@/components/salle-form"
+import BottomNavigation from "@/components/navigation/bottom-navigation"
 
 export default function NewSallePage() {
   const router = useRouter()
@@ -13,6 +14,7 @@ export default function NewSallePage() {
   return (
     <div className="min-h-screen bg-background">
       <SalleForm onSuccess={handleSuccess} />
+      <BottomNavigation />
     </div>
   )
 }

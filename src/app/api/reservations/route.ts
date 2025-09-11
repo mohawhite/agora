@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
       }
 
       if (status) {
-        where.status = status
+        // Gérer les statuts multiples (format: "CONFIRMED,PENDING")
+        const statusList = status.split(',').map(s => s.trim())
+        where.status = { in: statusList }
       }
 
       const reservations = await prisma.reservation.findMany({
